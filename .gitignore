@@ -87,6 +87,11 @@ dist
 # Comment in the public line in if your project uses Gatsby and *not* Next.js
 # https://nextjs.org/blog/next-9-1#public-directory-support
 # public
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
 
 # vuepress build output
 .vuepress/dist
@@ -102,3 +107,12 @@ dist
 
 # TernJS port file
 .tern-port
+# TypeScript output
+dist
+out
+
+# Azure Functions artifacts
+bin
+obj
+appsettings.json
+local.settings.json
