@@ -75,7 +75,7 @@ function insertOrMergeEntity(tableService: azure.TableService, tableName: string
 
 function insertOrMergeStatus(tableService: azure.TableService, tableName: string, id: string, status: Status) {
     const entry = {
-        id: entGen.String(id),
+        RowKey: entGen.String(id),
         status: entGen.Int32(status)
     }
     return insertOrMergeEntity(tableService, tableName, entry)
@@ -84,13 +84,14 @@ function insertOrMergeStatus(tableService: azure.TableService, tableName: string
 async function main(context: Context, options: Options) {
     const { id, authToken, connectionString, owner, repo, branch = 'master', version = upgrade.TypeScriptVersion.Latest } = options;
     const tableService = azure.createTableService(connectionString);
-    const tableName = "upgrade-process"
+    const tableName = "upgradeProcess"
 
     if (id) {
         await createTableIfNotExists(tableService, tableName)
 
         const entry = {
-            id: entGen.String(id),
+            PartitionKey: entGen.String(owner),
+            RowKey: entGen.String(id),
             owner: entGen.String(owner),
             repo: entGen.String(repo),
             branch: entGen.String(branch),
