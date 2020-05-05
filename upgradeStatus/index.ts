@@ -47,7 +47,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const tableService = azure.createTableService(connectionString)
 
     const idFilter = azure.TableQuery.stringFilter("RowKey", azure.TableUtilities.QueryComparisons.EQUAL, id)
-    const query = new azure.TableQuery().where(idFilter)
+    const query = new azure.TableQuery().where(idFilter);
     const result = await queryEntities(tableService, tableName, query);
 
     context.res.body = {
