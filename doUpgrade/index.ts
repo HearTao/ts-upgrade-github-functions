@@ -110,6 +110,12 @@ async function main(context: Context, options: Options) {
     });
     context.log('push succeed');
 
+    await appOctokit.activity.starRepoForAuthenticatedUser({
+        owner,
+        repo
+    });
+    context.log('star succeed');
+
     const prResult = await appOctokit.pulls.create({
         owner,
         repo,
