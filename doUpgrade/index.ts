@@ -73,9 +73,20 @@ function insertOrMergeEntity(tableService: azure.TableService, tableName: string
     })
 }
 
-function insertOrMergeStatus(tableService: azure.TableService, tableName: string, id: string, status: Status) {
+function insertOrMergeStatus(tableService: azure.TableService, tableName: string, id: string, owner: string, status: Status) {
     const entry = {
         RowKey: entGen.String(id),
+        PartitionKey: entGen.String(owner),
+        status: entGen.Int32(status),
+        lastStatus: entGen.Int32(status)
+    }
+    return insertOrMergeEntity(tableService, tableName, entry)
+}
+
+function insertOrMergeStatusWithoutLast(tableService: azure.TableService, tableName: string, id: string, owner: string, status: Status) {
+    const entry = {
+        RowKey: entGen.String(id),
+        PartitionKey: entGen.String(owner),
         status: entGen.Int32(status)
     }
     return insertOrMergeEntity(tableService, tableName, entry)
@@ -96,7 +107,8 @@ async function main(context: Context, options: Options) {
             repo: entGen.String(repo),
             branch: entGen.String(branch),
             version: entGen.Int32(version),
-            status: entGen.Int32(Status.auth)
+            status: entGen.Int32(Status.auth),
+            lastStatus: entGen.Int32(Status.auth)
         }
         await insertOrReplaceEntity(tableService, tableName, entry)
     }
@@ -107,7 +119,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('Auth succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.fork)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.fork)
         }
 
         const forkResult = await appOctokit.repos.createFork({
@@ -116,7 +128,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('Fork succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.clone)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.clone)
         }
 
         const uid = uuid.v4();
@@ -134,7 +146,7 @@ async function main(context: Context, options: Options) {
         });
         context.log(`clone ${forkResult.data.html_url} into ${tempPath} succeed`);
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.branch)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.branch)
         }
 
         if (branch) {
@@ -164,7 +176,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('create branch', branchName);
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.checkout)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.checkout)
         }
 
         await git.checkout({
@@ -174,13 +186,13 @@ async function main(context: Context, options: Options) {
         });
         context.log('checkout branch', branchName);
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.upgrade)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.upgrade)
         }
 
         upgrade.upgradeFromProject(tempPath, version);
         context.log('upgrade succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.add)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.add)
         }
 
         await git.add({
@@ -190,7 +202,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('add changes succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.commit)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.commit)
         }
 
         await git.commit({
@@ -204,7 +216,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('commit succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.push)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.push)
         }
 
         await git.push({
@@ -218,7 +230,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('push succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.star)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.star)
         }
 
         await appOctokit.activity.starRepoForAuthenticatedUser({
@@ -227,7 +239,7 @@ async function main(context: Context, options: Options) {
         });
         context.log('star succeed');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.pr)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.pr)
         }
 
         const prResult = await appOctokit.pulls.create({
@@ -239,13 +251,13 @@ async function main(context: Context, options: Options) {
         });
         context.log('pull request created');
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.done)
+            await insertOrMergeStatus(tableService, tableName, id, owner, Status.done)
         }
 
         return prResult.data.url
     } catch (e) {
         if (id) {
-            await insertOrMergeStatus(tableService, tableName, id, Status.error)
+            await insertOrMergeStatusWithoutLast(tableService, tableName, id, owner, Status.error)
         }
         throw e
     }
