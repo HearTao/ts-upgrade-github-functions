@@ -11,10 +11,11 @@
   },
   "dependencies": {
     "@octokit/rest": "^17.6.0",
+    "azure-storage": "^2.10.3",
     "isomorphic-git": "^1.4.0",
     "ts-upgrade": "^1.0.9",
-    "uuid": "^8.0.0",
-    "typescript": "^4.0.0-dev.20200504"
+    "typescript": "^4.0.0-dev.20200504",
+    "uuid": "^8.0.0"
   },
   "devDependencies": {
     "@azure/functions": "^1.0.2-beta2",
