@@ -95,7 +95,7 @@ function insertOrMergeStatusWithoutLast(tableService: azure.TableService, tableN
 async function main(context: Context, options: Options) {
     const { id, authToken, connectionString, owner, repo, branch = 'master', version = upgrade.TypeScriptVersion.Latest } = options;
     const tableService = azure.createTableService(connectionString);
-    const tableName = "upgradeProcess"
+    const tableName = process.env.TASK_TABLE_NAME
 
     if (id) {
         await createTableIfNotExists(tableService, tableName)
