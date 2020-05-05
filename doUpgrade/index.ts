@@ -13,10 +13,11 @@ export interface Options {
     owner: string;
     repo: string;
     branch?: string;
+    version?: upgrade.TypeScriptVersion
 }
 
 async function main(context: Context, options: Options) {
-    const { authToken, owner, repo, branch = 'master' } = options;
+    const { authToken, owner, repo, branch = 'master', version = upgrade.TypeScriptVersion.Latest } = options;
     const appOctokit = new Octokit({
         auth: authToken
     });
@@ -77,7 +78,7 @@ async function main(context: Context, options: Options) {
     });
     context.log('checkout branch', branchName);
 
-    upgrade.upgradeFromProject(tempPath, upgrade.TypeScriptVersion.v3_8);
+    upgrade.upgradeFromProject(tempPath, version);
     context.log('upgrade succeed');
 
     await git.add({
@@ -137,7 +138,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     context.log('HTTP trigger function processed a request.');
 
     const body = req.body
-    const { owner, repo, branch } = body.options
+    const { owner, repo, branch, version } = body.options
     const authToken = process.env.GITHUB_AUTH_TOKEN
     const timeout = parseInt(process.env.UPGRADE_TIMEOUT) || 3 * 60 * 1000
     
@@ -145,7 +146,8 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         authToken,
         owner,
         repo,
-        branch
+        branch,
+        version
     }, timeout)
 
     context.res.body = JSON.stringify({
